@@ -3,8 +3,7 @@ from django.db import models
 
 
 class Temp(models.Model):
-	""" Temp model. Tempapry place to store all movies and genres in one table.
-
+    """ Temp model. Tempapry place to store all movies and genres in one table.
     """
     movie_id = models.CharField(max_length=10, unique=True)
     title = models.CharField(max_length=500)
@@ -18,8 +17,7 @@ class Temp(models.Model):
 
 
 class Movie(models.Model):
-	""" Movies model
-
+    """ Movies model
     """
     movie_id = models.CharField(max_length=10, unique=True)
     title = models.CharField(max_length=500)
@@ -32,8 +30,7 @@ class Movie(models.Model):
 
 
 class Genre(models.Model):
-	""" Genre model
-
+    """ Genre model
     """
     name = models.CharField(max_length=100)
     description = models.CharField(max_length=500, default='')
@@ -46,8 +43,7 @@ class Genre(models.Model):
 
 
 class MovieGenre(models.Model):
-	""" Movie - Genre model. Relationship table between Movie and Genre.
-
+    """ Movie - Genre model. Relationship table between Movie and Genre.
     """
     movie_pk = models.ForeignKey(Movie, on_delete=models.CASCADE)
     genre_pk = models.ForeignKey(Genre, on_delete=models.CASCADE)
