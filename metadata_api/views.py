@@ -1,0 +1,82 @@
+from django.shortcuts import render
+
+from django.http import HttpResponse
+from metadata_api.models import Temp
+from django.http import JsonResponse
+from django.core import serializers
+import logging
+import json
+import codecs
+
+# def index(request):
+#     return HttpResponse("Hi, You're at the metadata api page.")
+
+def index(request):
+	""" Get all records from Temp table and return them in a json format.
+
+    Args:
+        request: http request..
+    Returns:
+        HttpResponse json with all records
+
+    """
+	datalObj = Temp.objects.all()
+
+	# this produces a list of dictionaries
+	dataList = serializers.serialize('python', datalObj)
+	
+	# extract just the inner `fields` dictionaries since we don't need 'pk' and 'model' values here
+	result = [d['fields'] for d in dataList]
+	
+	# return data back in json format with indent and formatting, so that it's easier to read
+	return HttpResponse(json.dumps(result, sort_keys=True, indent=4), content_type="application/json")
+
+
+def loadData(request):
+	""" Load data from text file into a temporary table in the DB.
+
+    Args:
+        request: http request.
+    Returns:
+        HttpResponse    
+
+    """
+    # counter for the number of new records that got instereted into DB
+	newRecordCouner = 0	
+
+	# open text file with encoding in order to handle foreign characters
+	with codecs.open('data/cornell-movie-dialogs-corpus/movie_titles_metadata.txt','r',encoding='utf8') as f:
+		# loop through each line of the file	
+		for line in f:
+			line = line.strip('\n')
+
+			# split line into a list by using ' +++$+++ ' delimiter
+			splitLine = line.split(" +++$+++ ")
+
+			try: 
+				# insert new record into the DB. _ is record object, created is boolean
+				_, created = Temp.objects.get_or_create(
+	                movie_id=splitLine[0],
+	                title=splitLine[1],
+	                year=splitLine[2],
+	                rating=splitLine[3],
+	                votes=splitLine[4],
+	                genre=splitLine[5],
+	                )
+
+				if created:
+					newRecordCouner += 1
+
+			except Exception as e:
+				# encode exception error message, just in case there are any non-standard characters, because we're displaying the messsage in HttpResponse
+				errorString = unicode(e).encode('utf-8')
+				errorMessage = "ERROR:  {0}. Data set: {1}".format(errorString, splitLine)
+
+				return HttpResponse(errorMessage)
+
+	if newRecordCouner > 0:
+		resultMessage = 'Inserted {0} new record into the DB'.format(newRecordCouner)
+	else:
+		resultMessage = 'All movies already exist in the DB, nothing new was inserted.'
+
+	return HttpResponse(resultMessage)
