@@ -5,12 +5,18 @@ from django.shortcuts import render
 
 from django.http import HttpResponse
 from metadata_api.models import Temp
+from metadata_api.models import Movie
+from metadata_api.models import Genre
+from metadata_api.models import MovieGenre
 from django.http import JsonResponse
 from django.core import serializers
 import logging
 import json
 import codecs
 from django.shortcuts import get_object_or_404
+import traceback
+import sys
+import os
 
 def index(request):
 	return HttpResponse("Hello! Welcome to the Movie API app!")
@@ -40,13 +46,13 @@ def loadData(request):
 			try: 
 				# insert new record into the DB. _ is record object, created is boolean
 				_, created = Temp.objects.get_or_create(
-	                movie_id=splitLine[0],
-	                title=splitLine[1],
-	                year=splitLine[2],
-	                rating=splitLine[3],
-	                votes=splitLine[4],
-	                genre=splitLine[5],
-	                )
+			        movie_id=splitLine[0],
+			        title=splitLine[1],
+			        year=splitLine[2],
+			        rating=splitLine[3],
+			        votes=splitLine[4],
+			        genre=splitLine[5],
+			        )
 
 				if created:
 					newRecordCouner += 1
@@ -111,6 +117,7 @@ def getTitleDetails(request, primaryKey):
 	
 	return HttpResponse(dataJson, content_type="application/json")
 
+
 def getJsonData(datalObj):
 	""" Convert data object from model into json and extract only fields object.
 
@@ -131,6 +138,78 @@ def getJsonData(datalObj):
 
 	return result
 
+
+def migrateRecords(request):
+	# counters for the number of new records that got instereted into DB
+	newMovieCouner = 0
+	newGenreCouner = 0
+	newMovieGenreCouner = 0
+
+	# get all records from Temp table in a list format
+	records = list(Temp.objects.all()[:6])
+	
+	# loop through each record and then insert into appropriate tables	
+	for record in records:
+		print "record", record
+		movieId = record.pk
+		genreStr = record.genre.strip('[').strip(']')
+		print "genreStr", genreStr
+
+		genreList = genreStr.split(', ')
+		print "genreStr", genreList
+		
+		try: 
+			for genre in genreList:
+				genre = genre.strip("'")
+				print "genre ", genre
+
+				genreObject, createdGenre = Genre.objects.get_or_create(
+					name=genre,
+					)
+
+				genreId = genreObject.pk
+				
+				if createdGenre:
+					newGenreCouner += 1
+
+			movieObject, createdMovie = Movie.objects.get_or_create(
+				movie_id=record.movie_id,
+				title=record.title,
+				year=record.year,
+				rating=record.rating,
+    			votes=record.votes
+				)
+
+			if createdMovie:
+				newMovieCouner += 1
+
+			movieGenreObject, createdMovieGenre = MovieGenre.objects.get_or_create( movie_pk=movieObject, genre_pk=genreObject)
+
+			if createdMovieGenre:
+				newMovieGenreCouner += 1
+		
+		except Exception as e:
+			tb = traceback.format_exc()
+
+			print("::::: ERROR reported :::::")
+			print(tb)
+			
+			# encode exception error message, just in case there are any non-standard characters, because we're displaying the messsage in HttpResponse
+			errorString = unicode(e).encode('utf-8')
+
+			(exc_type, exc_obj, exc_tb) = sys.exc_info()
+			excFileName = str(os.path.split(exc_tb.tb_frame.f_code.co_filename)[1])
+			excLineNum = str(exc_tb.tb_lineno)
+			excType = str(e.__class__.__name__)
+
+			errorMessage = "ERROR: {0}: {1} - {2} (line {3})".format(excType, errorString, excFileName, excLineNum)
+			print(errorMessage)
+
+			return HttpResponse(errorMessage)
+
+	resultMessage = "newGenreCouner:  {0}, newMovieGenreCouner: {1}, newMovieGenreCouner: {2}".format(newGenreCouner, newMovieGenreCouner, newMovieGenreCouner)
+
+	return HttpResponse(resultMessage)
 
 
 
