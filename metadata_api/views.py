@@ -36,7 +36,7 @@ def loadData(request):
 
 	# open text file with encoding in order to handle foreign characters
 	with codecs.open('data/cornell-movie-dialogs-corpus/movie_titles_metadata.txt','r',encoding='utf8') as f:
-		# loop through each line of the file	
+		# loop through each line of the file
 		for line in f:
 			line = line.strip('\n')
 
@@ -73,7 +73,7 @@ def loadData(request):
 
 
 def getAllTitles(request):
-	""" Get all records from Temp table and return them in a json format.
+	""" Get all records from Movie titles table and return them in a json format.
 
     Args:
         request: http request..
@@ -112,10 +112,10 @@ def getTitleDetails(request, primaryKey):
         HttpResponse json with all records ordered by year.
 
     """
-	datalObj = Temp.objects.filter(pk=primaryKey)
-	dataJson = getJsonData(datalObj)
+	movieObj = Temp.objects.filter(pk=primaryKey)
+	movieJson = getJsonData(movieObj)
 	
-	return HttpResponse(dataJson, content_type="application/json")
+	return HttpResponse(movieJson, content_type="application/json")
 
 
 def getJsonData(datalObj):
@@ -146,26 +146,20 @@ def migrateRecords(request):
 	newMovieGenreCouner = 0
 
 	# get all records from Temp table in a list format
-	records = list(Temp.objects.all()[:6])
+	records = list(Temp.objects.all())
 	
 	# loop through each record and then insert into appropriate tables	
 	for record in records:
-		print "record", record
 		movieId = record.pk
 		genreStr = record.genre.strip('[').strip(']')
-		print "genreStr", genreStr
 
 		genreList = genreStr.split(', ')
-		print "genreStr", genreList
 		
 		try: 
 			for genre in genreList:
 				genre = genre.strip("'")
-				print "genre ", genre
 
-				genreObject, createdGenre = Genre.objects.get_or_create(
-					name=genre,
-					)
+				genreObject, createdGenre = Genre.objects.get_or_create(name=genre)
 
 				genreId = genreObject.pk
 				
@@ -183,7 +177,7 @@ def migrateRecords(request):
 			if createdMovie:
 				newMovieCouner += 1
 
-			movieGenreObject, createdMovieGenre = MovieGenre.objects.get_or_create( movie_pk=movieObject, genre_pk=genreObject)
+			movieGenreObject, createdMovieGenre = MovieGenre.objects.get_or_create(movie_pk=movieObject, genre_pk=genreObject)
 
 			if createdMovieGenre:
 				newMovieGenreCouner += 1

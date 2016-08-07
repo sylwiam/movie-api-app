@@ -38,4 +38,5 @@ python manage.py migrate
     - load data from text file into Temp table
 - /api/migrate-records
     - migrates records from Temp table into movie/genre/moviegenre tables
+
 ------------
