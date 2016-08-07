@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- encoding: utf-8 -*-
+
 from django.shortcuts import render
 
 from django.http import HttpResponse
@@ -7,29 +10,10 @@ from django.core import serializers
 import logging
 import json
 import codecs
-
-# def index(request):
-#     return HttpResponse("Hi, You're at the metadata api page.")
+from django.shortcuts import get_object_or_404
 
 def index(request):
-	""" Get all records from Temp table and return them in a json format.
-
-    Args:
-        request: http request..
-    Returns:
-        HttpResponse json with all records
-
-    """
-	datalObj = Temp.objects.all()
-
-	# this produces a list of dictionaries
-	dataList = serializers.serialize('python', datalObj)
-	
-	# extract just the inner `fields` dictionaries since we don't need 'pk' and 'model' values here
-	result = [d['fields'] for d in dataList]
-	
-	# return data back in json format with indent and formatting, so that it's easier to read
-	return HttpResponse(json.dumps(result, sort_keys=True, indent=4), content_type="application/json")
+	return HttpResponse("Hello! Welcome to the Movie API app!")
 
 
 def loadData(request):
@@ -80,3 +64,66 @@ def loadData(request):
 		resultMessage = 'All movies already exist in the DB, nothing new was inserted.'
 
 	return HttpResponse(resultMessage)
+
+
+def getAllTitles(request):
+	""" Get all records from Temp table and return them in a json format.
+
+    Args:
+        request: http request..
+    Returns:
+        HttpResponse json with all records
+
+    """
+	datalObj = Temp.objects.all()	
+	dataJson = getJsonData(datalObj)
+
+	return HttpResponse(dataJson, content_type="application/json")
+
+
+def getLatestTitles(request):
+	""" Get all titles, order by year descengind.
+
+    Args:
+        request: http request..
+    Returns:
+        HttpResponse json with all records ordered by year.
+
+    """
+	datalObj = Temp.objects.all().order_by('-year')
+	dataJson = getJsonData(datalObj)
+	
+	return HttpResponse(dataJson, content_type="application/json")
+
+
+def getTitleDetails(request, primaryKey):
+	""" Get all details for a given title.
+
+    Args:
+        request: http request.
+        primaryKey: primary key of a title.
+    Returns:
+        HttpResponse json with all records ordered by year.
+
+    """
+	datalObj = Temp.objects.filter(pk=primaryKey)
+	dataJson = getJsonData(datalObj)
+	
+	return HttpResponse(dataJson, content_type="application/json")
+
+def getJsonData(datalObj):
+	# this produces a list of dictionaries
+	dataList = serializers.serialize('python', datalObj)
+	
+	# extract just the inner `fields` dictionaries since we don't need 'pk' and 'model' values here
+	dataFieldsList = [d['fields'] for d in dataList]
+
+	# convert to json and apply indentation so that it's easier to read data
+	result = json.dumps(dataFieldsList, sort_keys=True, indent=4)
+
+	return result
+
+
+
+
+
