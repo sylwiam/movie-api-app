@@ -2,18 +2,16 @@
 # -*- encoding: utf-8 -*-
 
 from django.shortcuts import render
-
+from django.shortcuts import get_object_or_404
 from django.http import HttpResponse
+from django.core import serializers
 from metadata_api.models import Temp
 from metadata_api.models import Movie
 from metadata_api.models import Genre
 from metadata_api.models import MovieGenre
-from django.http import JsonResponse
-from django.core import serializers
 import logging
 import json
 import codecs
-from django.shortcuts import get_object_or_404
 import traceback
 import sys
 import os
@@ -79,25 +77,60 @@ def getAllTitles(request):
         request: http request..
     Returns:
         HttpResponse json with all records
-
+	
+	@todo: convert to load data from joined models: Movie, Genre, MovieGenre
     """
-	datalObj = Temp.objects.all()	
-	dataJson = getJsonData(datalObj)
+	dataObj = Temp.objects.all()	
+	dataJson = getJsonData(dataObj)
 
 	return HttpResponse(dataJson, content_type="application/json")
 
 
 def getLatestTitles(request):
-	""" Get all titles, order by year descengind.
+	""" Get newset 50 titles titles, order by year descending.
 
     Args:
         request: http request..
     Returns:
-        HttpResponse json with all records ordered by year.
+        HttpResponse json records result set.
 
+	@todo: convert to load data from joined models: Movie, Genre, MovieGenre
     """
-	datalObj = Temp.objects.all().order_by('-year')
-	dataJson = getJsonData(datalObj)
+	dataObj = Temp.objects.all().order_by('-year')[:50]
+	dataJson = getJsonData(dataObj)
+	
+	return HttpResponse(dataJson, content_type="application/json")
+
+def getTitlesByYear(request, year):
+	""" Get all movie titles from a given year.
+
+    Args:
+        request: http request..
+        year: year the movie was released
+    Returns:
+        HttpResponse json records result set.
+
+	@todo: convert to load data from joined models: Movie, Genre, MovieGenre
+    """
+	dataObj = Temp.objects.filter(year=year)
+	dataJson = getJsonData(dataObj)
+	
+	return HttpResponse(dataJson, content_type="application/json")
+
+
+def getTitlesByGenre(request, genre):
+	""" Get all movie titles with a given genre.
+
+    Args:
+        request: http request..
+        genre: genre search parameter
+    Returns:
+        HttpResponse json records result set.
+
+	@todo: convert to load data from joined models: Movie, Genre, MovieGenre
+    """
+	dataObj = Temp.objects.filter(genre__icontains=genre)
+	dataJson = getJsonData(dataObj)
 	
 	return HttpResponse(dataJson, content_type="application/json")
 
@@ -110,7 +143,8 @@ def getTitleDetails(request, primaryKey):
         primaryKey: primary key of a title.
     Returns:
         HttpResponse json with all records ordered by year.
-
+	
+	@todo: convert to load data from joined models: Movie, Genre, MovieGenre
     """
 	movieObj = Temp.objects.filter(pk=primaryKey)
 	movieJson = getJsonData(movieObj)
@@ -118,17 +152,17 @@ def getTitleDetails(request, primaryKey):
 	return HttpResponse(movieJson, content_type="application/json")
 
 
-def getJsonData(datalObj):
+def getJsonData(dataObj):
 	""" Convert data object from model into json and extract only fields object.
 
     Args:
-        datalObj: model object.
+        dataObj: model object.
     Returns:
         array of json objects.
 
     """
 	# this produces a list of dictionaries
-	dataList = serializers.serialize('python', datalObj)
+	dataList = serializers.serialize('python', dataObj)
 	
 	# extract just the inner `fields` dictionaries since we don't need 'pk' and 'model' values here
 	dataFieldsList = [d['fields'] for d in dataList]
@@ -204,7 +238,3 @@ def migrateRecords(request):
 	resultMessage = "newGenreCouner:  {0}, newMovieGenreCouner: {1}, newMovieGenreCouner: {2}".format(newGenreCouner, newMovieGenreCouner, newMovieGenreCouner)
 
 	return HttpResponse(resultMessage)
-
-
-
-
