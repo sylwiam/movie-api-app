@@ -31,11 +31,11 @@ python manage.py migrate
     - gets all movie titles
 - /api/titles/latest
     - gets newwest 50 movie titles organized by year, most recent ones first
-- /api/titles/<movie-title-id>/
+- /api/titles/movie-title-id-here/
     - gets details about one specific movie, given movie id (primary key)
-- /api/titles/year/<year>/
+- /api/titles/year/year-here/
     - gets all movies released in a given year
-- /api/titles/genre/<genre>/
+- /api/titles/genre/genre-name-here/
     - gets all movies that belong to a given genre
 
 #### Helper api:
