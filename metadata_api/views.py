@@ -112,6 +112,14 @@ def getTitleDetails(request, primaryKey):
 	return HttpResponse(dataJson, content_type="application/json")
 
 def getJsonData(datalObj):
+	""" Convert data object from model into json and extract only fields object.
+
+    Args:
+        datalObj: model object.
+    Returns:
+        array of json objects.
+
+    """
 	# this produces a list of dictionaries
 	dataList = serializers.serialize('python', datalObj)
 	
