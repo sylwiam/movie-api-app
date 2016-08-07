@@ -27,7 +27,8 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-# use ConfigParser to read private config values
+# use ConfigParser to read private config values, 
+# @todo: put ConfigParser in a centralized place, so that values can be accesed from any place in the app
 config = RawConfigParser()
 configFilePath = os.path.join(BASE_DIR, 'movie_app', 'settings.ini')
 config.read(configFilePath)

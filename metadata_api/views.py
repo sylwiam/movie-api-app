@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- encoding: utf-8 -*-
 
+from ConfigParser import RawConfigParser
 from django.shortcuts import render
 from django.shortcuts import get_object_or_404
 from django.http import HttpResponse
@@ -32,8 +33,16 @@ def loadData(request):
     # counter for the number of new records that got instereted into DB
 	newRecordCouner = 0	
 
+	# @todo: put ConfigParser in a centralized place, so that values can be accesed from any place in the app
+	config = RawConfigParser()
+	baseDir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+	configFilePath = os.path.join(baseDir, 'movie_app', 'settings.ini')
+	config.read(configFilePath)
+
+	filePath = config.get('files', 'DATA_FILE_PATH')
+
 	# open text file with encoding in order to handle foreign characters
-	with codecs.open('data/cornell-movie-dialogs-corpus/movie_titles_metadata.txt','r',encoding='utf8') as f:
+	with codecs.open(filePath,'r',encoding='utf8') as f:
 		# loop through each line of the file
 		for line in f:
 			line = line.strip('\n')
