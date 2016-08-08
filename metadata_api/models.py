@@ -44,4 +44,3 @@ class MovieGenre(models.Model):
     """
     movie_pk = models.ForeignKey(Movie, on_delete=models.CASCADE)
     genre_pk = models.ForeignKey(Genre, on_delete=models.CASCADE)
-
