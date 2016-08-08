@@ -1,4 +1,5 @@
 # Movie API app
+This app is built on top of Django Python framework. It loads movie metadata from a text file into a database. It also provides a lightweight api to quickly get filtered movie information. See below for details.
 
 ### Project setup instructions:
 ##### Create settings.ini file:
